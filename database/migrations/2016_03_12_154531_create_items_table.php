@@ -15,8 +15,8 @@ class CreateItemsTable extends Migration
         Schema::create('items', function (Blueprint $table) {
             $table->increments('id');
             $table->integer('type')->default(0);
-            $table->text('text');
-            $table->text('href')->default('');
+            $table->text('text')->nullable();
+            $table->text('href')->nullable();
             $table->timestamps();
         });
     }
