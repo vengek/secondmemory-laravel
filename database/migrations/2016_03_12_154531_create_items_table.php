@@ -14,6 +14,7 @@ class CreateItemsTable extends Migration
     {
         Schema::create('items', function (Blueprint $table) {
             $table->increments('id');
+            $table->integer('user_id');
             $table->integer('type')->default(0);
             $table->text('text')->nullable();
             $table->text('href')->nullable();

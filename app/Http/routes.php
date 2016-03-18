@@ -34,3 +34,4 @@ Route::get('items/next-to-repeat', 'ItemsController@next_to_repeat');
 Route::get('items/learn', 'ItemsController@learn');
 Route::get('items/search/{query}', 'ItemsController@search');
 Route::resource('items', 'ItemsController');
+Route::post('users/auth', 'UsersController@auth');

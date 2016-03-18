@@ -11,6 +11,7 @@ use Illuminate\Http\Request;
 use App\Http\Requests;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Input;
+use Illuminate\Support\Facades\Session;
 
 
 class ItemsController extends Controller
@@ -22,7 +23,7 @@ class ItemsController extends Controller
      */
     public function index()
     {
-        $items = Items::all();
+        $items = Items::byUserId($_SESSION['userId'])->get();
         return $items;
     }
 
@@ -46,9 +47,10 @@ class ItemsController extends Controller
     {
         $item = new Items();
         $item->fill($request->all());
+        $item->user_id = $_SESSION['userId'];
         try {
             $item->save();
-            return ['code' => 200, 'message' => 'created', 'description' => 'Added item','item' => $item];
+            return ['code' => 200, 'message' => 'created', 'description' => 'Added item','items' => $item];
         } catch (\Exception $e) {
             return ['code' => 500];
         }
@@ -64,7 +66,7 @@ class ItemsController extends Controller
     {
         try {
             $item = Items::findOrFail($id);
-            return ['code' => 200, 'message' => 'ok', 'description' => 'Item','item' => $item];
+            return ['code' => 200, 'message' => 'ok', 'description' => 'Item','items' => $item];
         } catch (ModelNotFoundException $e) {
             return ['code' => 404, 'message' => $e->getMessage()];
         }
@@ -94,7 +96,7 @@ class ItemsController extends Controller
             $item = Items::findOrFail($id);
             $item->fill($request->all());
             $item->save();
-            return ['code' => 200, 'message' => 'ok', 'description' => 'Updated item','item' => $item];
+            return ['code' => 200, 'message' => 'ok', 'description' => 'Updated item','items' => $item];
         } catch (ModelNotFoundException $e) {
             return ['code' => 404, 'message' => $e->getMessage()];
         }
@@ -118,12 +120,12 @@ class ItemsController extends Controller
 
     public function learn()
     {
-        return Items::orderByRaw('RANDOM()')->where('type', '=', Items::TYPE_TWO)->take(Items::NUMBER_FOR_LEARN)->get();
+        return Items::orderByRaw('RANDOM()')->where('type', '=', Items::TYPE_TWO)->byUserId($_SESSION['userId'])->take(Items::NUMBER_FOR_LEARN)->get();
     }
 
     public function search($query)
     {
-        $items =  Items::whereRaw("text @@ ?", [$query])->orWhereRaw("href @@ ?", [$query])->get();
+        $items =  Items::whereRaw("text @@ ?", [$query])->orWhereRaw("href @@ ?", [$query])->byUserId($_SESSION['userId'])->get();
         return ['code' => 200, 'message' => 'ok', 'items' => $items];
     }
 
@@ -167,9 +169,10 @@ class ItemsController extends Controller
         $item = DB::table('items')
             ->leftJoin('repeat_queue', 'items.id', '=', 'repeat_queue.id')
             ->whereRaw('NULLIF(repeat_queue.next_repeat, to_timestamp(0)) < NOW() AND TYPE=0')
+            ->where('items.user_id', '=', $_SESSION['userId'])
             ->orderByRaw('NULLIF(repeat_queue.next_repeat, to_timestamp(0)) ASC')
             ->take(1)
             ->get();
-        return ['code' => 200, 'message' => 'ok', 'item' => $item];
+        return ['code' => 200, 'message' => 'ok', 'items' => $item];
     }
 }
