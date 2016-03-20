@@ -10,8 +10,8 @@ use Illuminate\Http\Request;
 
 use App\Http\Requests;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Input;
-use Illuminate\Support\Facades\Session;
+
+use Symfony\Component\HttpFoundation\JsonResponse;
 
 
 class ItemsController extends Controller
@@ -153,14 +153,17 @@ class ItemsController extends Controller
                     break;
             }
             $repeatLog->insert(['id' => $id, 'repeated_at' => 'NOW()']);
-            if (DB::table('repeat_queue')->where('id', '=', $id)->get()) {
-                DB::table('repeat_queue')->update(['id' => $id, 'next_repeat' => $nextDateToRepeat]);
+            $repeatQue = DB::table('repeat_queue');
+            if ($repeatQue->where('id', '=', $id)->get()) {
+                $repeatQue
+                    ->where('id', '=', $id)
+                    ->update(['next_repeat' => $nextDateToRepeat]);
             } else {
-                DB::table('repeat_queue')->insert(['id' => $id, 'next_repeat' => $nextDateToRepeat]);
+                $repeatQue>insert(['id' => $id, 'next_repeat' => $nextDateToRepeat]);
             }
-            return ;
+            return $item;
         } catch (\Exception $e) {
-
+            return response($e->getMessage(), 404);
         }
     }
 
