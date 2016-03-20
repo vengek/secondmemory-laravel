@@ -166,7 +166,11 @@ class ItemsController extends Controller
             ->where('items.user_id', '=', $_SESSION['userId'])
             ->orderByRaw('NULLIF(repeat_queue.next_repeat, to_timestamp(0)) ASC')
             ->take(1)
-            ->get();
-        return ['code' => 200, 'message' => 'ok', 'items' => $item];
+            ->first();
+        if ($item) {
+            return ['code' => 200, 'message' => 'ok', 'item' => $item];
+        } else {
+            return response('', 204);
+        }
     }
 }
