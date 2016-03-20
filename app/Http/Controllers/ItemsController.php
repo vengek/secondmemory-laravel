@@ -172,9 +172,9 @@ class ItemsController extends Controller
     {
         $item = DB::table('items')
             ->leftJoin('repeat_queue', 'items.id', '=', 'repeat_queue.id')
-            ->whereRaw('NULLIF(repeat_queue.next_repeat, to_timestamp(0)) < NOW() AND TYPE=0')
+            ->whereRaw('COALESCE(repeat_queue.next_repeat, to_timestamp(0)) < NOW() AND TYPE=0')
             ->where('items.user_id', '=', $_SESSION['userId'])
-            ->orderByRaw('NULLIF(repeat_queue.next_repeat, to_timestamp(0)) ASC')
+            ->orderByRaw('COALESCE(repeat_queue.next_repeat, to_timestamp(0)) ASC')
             ->take(1)
             ->first();
         if ($item) {
