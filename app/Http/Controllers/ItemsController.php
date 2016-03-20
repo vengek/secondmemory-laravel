@@ -1,18 +1,12 @@
 <?php
-
 namespace App\Http\Controllers;
 
 use App\Items;
 use Carbon\Carbon;
-use Faker\Provider\cs_CZ\DateTime;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
-
 use App\Http\Requests;
 use Illuminate\Support\Facades\DB;
-
-use Symfony\Component\HttpFoundation\JsonResponse;
-
 
 class ItemsController extends Controller
 {
@@ -48,12 +42,9 @@ class ItemsController extends Controller
         $item = new Items();
         $item->fill($request->all());
         $item->user_id = $_SESSION['userId'];
-        try {
-            $item->save();
-            return ['code' => 200, 'message' => 'created', 'description' => 'Added item','items' => $item];
-        } catch (\Exception $e) {
-            return ['code' => 500];
-        }
+        
+        $item->save();
+        return ['code' => 200, 'message' => 'created', 'description' => 'Added item','item' => $item];
     }
 
     /**
@@ -96,7 +87,7 @@ class ItemsController extends Controller
             $item = Items::findOrFail($id);
             $item->fill($request->all());
             $item->save();
-            return ['code' => 200, 'message' => 'ok', 'description' => 'Updated item','items' => $item];
+            return ['code' => 200, 'message' => 'ok', 'description' => 'Updated item','item' => $item];
         } catch (ModelNotFoundException $e) {
             return ['code' => 404, 'message' => $e->getMessage()];
         }
@@ -153,13 +144,13 @@ class ItemsController extends Controller
                     break;
             }
             $repeatLog->insert(['id' => $id, 'repeated_at' => 'NOW()']);
-            $repeatQue = DB::table('repeat_queue');
-            if ($repeatQue->where('id', '=', $id)->get()) {
-                $repeatQue
+            $repeatQueue = DB::table('repeat_queue');
+            if ($repeatQueue->where('id', '=', $id)->get()) {
+                $repeatQueue
                     ->where('id', '=', $id)
                     ->update(['next_repeat' => $nextDateToRepeat]);
             } else {
-                $repeatQue>insert(['id' => $id, 'next_repeat' => $nextDateToRepeat]);
+                $repeatQueue->insert(['id' => $id, 'next_repeat' => $nextDateToRepeat]);
             }
             return $item;
         } catch (\Exception $e) {
