@@ -120,7 +120,7 @@ class ItemsController extends Controller
 
     public function learn()
     {
-        return Items::orderByRaw('RANDOM()')->where('type', '=', Items::TYPE_TWO)->byUserId($_SESSION['userId'])->take(Items::NUMBER_FOR_LEARN)->get();
+        return Items::orderByRaw('RANDOM()')->where('type', '=', Items::TYPE_TO_LEARN)->byUserId($_SESSION['userId'])->take(Items::NUMBER_FOR_LEARN)->get();
     }
 
     public function search($query)
