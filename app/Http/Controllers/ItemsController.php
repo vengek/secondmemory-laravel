@@ -171,6 +171,7 @@ class ItemsController extends Controller
     public function next_to_repeat()
     {
         $item = DB::table('items')
+            ->select('items.*')
             ->leftJoin('repeat_queue', 'items.id', '=', 'repeat_queue.id')
             ->whereRaw('COALESCE(repeat_queue.next_repeat, to_timestamp(0)) < NOW() AND TYPE=0')
             ->where('items.user_id', '=', $_SESSION['userId'])
