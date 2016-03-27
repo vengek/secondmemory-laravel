@@ -2,6 +2,7 @@
 namespace App\Http\Controllers;
 
 use App\Items;
+use App\Link;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
@@ -183,5 +184,29 @@ class ItemsController extends Controller
         } else {
             return response('', 204);
         }
+    }
+    
+    public function get_links(Request $request, $id)
+    {
+	return Link::where('id', $id)->get();
+    }
+    
+    public function put_links(Request $request, $id)
+    {
+	$data = [
+	    'id' => $id,
+	    'right' => $request->input('right'),
+	    'type_id' => $request->input('type_id', 0),
+	];
+	$link = Link::firstOrNew($data);
+	$link->x = $request->input('x', 0);
+	$link->y = $request->input('y', 0);
+	$link->save();
+	
+	list($data['id'], $data['right']) = [$data['right'], $data['id']];
+	$link = Link::firstOrNew($data);
+	$link->save();
+	
+	return response('', 200);
     }
 }

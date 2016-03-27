@@ -16,7 +16,7 @@ class CreateItemsTable extends Migration
             $table->increments('id');
             $table->integer('user_id');
             $table->integer('type')->default(0);
-            $table->text('text')->nullable();
+            $table->text('text')->default('');
             $table->text('href')->nullable();
             $table->timestamps();
         });

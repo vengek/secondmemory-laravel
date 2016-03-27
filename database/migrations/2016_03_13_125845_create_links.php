@@ -13,10 +13,13 @@ class CreateLinks extends Migration
     public function up()
     {
         Schema::create('links', function (Blueprint $table) {
-            $table->integer('left');
+            $table->increments('_id');
+            $table->integer('id');
             $table->integer('right');
-            $table->integer('id')->default(0);
-            $table->primary(['left', 'right', 'id']);
+            $table->integer('type_id')->default(0);
+            $table->integer('x')->default(0);
+            $table->integer('y')->default(0);
+            $table->unique(['id', 'right', 'type_id']);
         });
     }
 
