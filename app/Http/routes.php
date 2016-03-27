@@ -37,3 +37,4 @@ Route::resource('items', 'ItemsController');
 Route::post('users/auth', 'UsersController@auth');
 Route::get('items/{id}/links', 'ItemsController@get_links');
 Route::put('items/{id}/links', 'ItemsController@put_links');
+Route::delete('items/{id}/links', 'ItemsController@delete_link');

@@ -209,4 +209,12 @@ class ItemsController extends Controller
 	
 	return response('', 200);
     }
+
+    public function delete_link(Request $request, $id)
+    {
+        $right = $request->input('right');
+        $typeId = $request->input('type_id', 0);
+        Link::where('id', $id)->where('right', $right)->where('type_id', $typeId)->delete();
+        Link::where('id', $right)->where('right', $id)->where('type_id', $typeId)->delete();
+    }
 }
