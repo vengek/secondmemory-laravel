@@ -104,6 +104,9 @@ class ItemsController extends Controller
     {
         try {
             Items::findOrFail($id)->delete();
+            Link::where('id', $id)->delete();
+            Link::where('right', $id)->delete();
+            Link::where('type_id', $id)->delete();
             return ['code' => 200, 'message' => 'deleted',];
         } catch (ModelNotFoundException $e) {
             return ['code' => 404, 'message' => $e->getMessage()];
