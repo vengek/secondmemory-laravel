@@ -3,11 +3,11 @@ namespace App\Http\Controllers;
 
 use App\Items;
 use App\Link;
-use Carbon\Carbon;
+use App\RepeatLog;
+use App\RepeatQueue;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
 use App\Http\Requests;
-use Illuminate\Support\Facades\DB;
 
 class ItemsController extends Controller
 {
@@ -23,16 +23,6 @@ class ItemsController extends Controller
     }
 
     /**
-     * Show the form for creating a new resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function create()
-    {
-
-    }
-
-    /**
      * Store a newly created resource in storage.
      *
      * @param  \Illuminate\Http\Request  $request
@@ -43,9 +33,8 @@ class ItemsController extends Controller
         $item = new Items();
         $item->fill($request->all());
         $item->user_id = $_SESSION['userId'];
-        
         $item->save();
-        return ['code' => 200, 'message' => 'created', 'description' => 'Added item','item' => $item];
+        return $item;
     }
 
     /**
@@ -58,21 +47,10 @@ class ItemsController extends Controller
     {
         try {
             $item = Items::findOrFail($id);
-            return ['code' => 200, 'message' => 'ok', 'description' => 'Item','items' => $item];
+            return $item;
         } catch (ModelNotFoundException $e) {
-            return ['code' => 404, 'message' => $e->getMessage()];
+            return response($e->getMessage(), 404);
         }
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function edit($id)
-    {
-        //
     }
 
     /**
@@ -88,9 +66,9 @@ class ItemsController extends Controller
             $item = Items::findOrFail($id);
             $item->fill($request->all());
             $item->save();
-            return ['code' => 200, 'message' => 'ok', 'description' => 'Updated item','item' => $item];
+            return $item;
         } catch (ModelNotFoundException $e) {
-            return ['code' => 404, 'message' => $e->getMessage()];
+            return response($e->getMessage(), 404);
         }
     }
 
@@ -104,21 +82,15 @@ class ItemsController extends Controller
     {
         try {
             Items::findOrFail($id)->delete();
-            return ['code' => 200, 'message' => 'deleted',];
+            return response('', 200);
         } catch (ModelNotFoundException $e) {
-            return ['code' => 404, 'message' => $e->getMessage()];
+            return response($e->getMessage(), 404);
         }
     }
 
     public function learn()
     {
-        $item = Items::orderByRaw('RANDOM()')
-            ->where('type', '=', Items::TYPE_TO_LEARN)
-            ->byUserId($_SESSION['userId'])
-            ->take(Items::NUMBER_FOR_LEARN)
-            ->first();
-
-        if ($item) {
+        if ($item = Items::getItemForLearn($_SESSION['userId'])) {
             return $item;
         } else {
             return response('', 204);
@@ -127,87 +99,54 @@ class ItemsController extends Controller
 
     public function search($query)
     {
-        $items =  Items::whereRaw("text @@ ?", [$query])->orWhereRaw("href @@ ?", [$query])->byUserId($_SESSION['userId'])->get();
-        return ['code' => 200, 'message' => 'ok', 'items' => $items];
+        $items =  Items::searchItemsForUser($query, $_SESSION['userId']);
+        return $items;
     }
 
     public function repeat($id)
     {
         try {
             $item = Items::findOrFail($id);
-            $nextDateToRepeat = Carbon::now();
-            $repeatLog = DB::table('repeat_log');
-            $numberOfRepeats = $repeatLog
-                ->where('id', '=', $id)
-                ->count();
-            switch ($numberOfRepeats) {
-                case 0:
-                    $nextDateToRepeat->addDay();
-                    break;
-                case 1:
-                    $nextDateToRepeat->addWeeks(2);
-                    break;
-                case 2:
-                    $nextDateToRepeat->addMonths(2);
-                    break;
-                default:
-                    $nextDateToRepeat->addYear();
-                    break;
-            }
-            $repeatLog->insert(['id' => $id, 'repeated_at' => 'NOW()']);
-            $repeatQueue = DB::table('repeat_queue');
-            if ($repeatQueue->where('id', '=', $id)->get()) {
-                $repeatQueue
-                    ->where('id', '=', $id)
-                    ->update(['next_repeat' => $nextDateToRepeat]);
-            } else {
-                $repeatQueue->insert(['id' => $id, 'next_repeat' => $nextDateToRepeat]);
-            }
+            RepeatLog::insert(['id' => $id, 'repeated_at' => 'NOW()']);
+            RepeatQueue::setNextRepeat($id, RepeatLog::where('id', $id)->count());
             return $item;
-        } catch (\Exception $e) {
+        } catch (ModelNotFoundException $e) {
             return response($e->getMessage(), 404);
         }
     }
 
     public function next_to_repeat()
     {
-        $item = DB::table('items')
-            ->select('items.*')
-            ->leftJoin('repeat_queue', 'items.id', '=', 'repeat_queue.id')
-            ->whereRaw('COALESCE(repeat_queue.next_repeat, to_timestamp(0)) < NOW() AND TYPE=0')
-            ->where('items.user_id', '=', $_SESSION['userId'])
-            ->orderByRaw('COALESCE(repeat_queue.next_repeat, to_timestamp(0)) ASC')
-            ->take(1)
-            ->first();
+        $item = Items::toRepeat();
         if ($item) {
-            return ['code' => 200, 'message' => 'ok', 'item' => $item];
+            return $item;
         } else {
             return response('', 204);
         }
     }
     
-    public function get_links(Request $request, $id)
+    public function get_links($id)
     {
-	return Link::where('id', $id)->get();
+	    return Link::where('id', $id)->get();
     }
     
     public function put_links(Request $request, $id)
     {
-	$data = [
-	    'id' => $id,
-	    'right' => $request->input('right'),
-	    'type_id' => $request->input('type_id', 0),
-	];
-	$link = Link::firstOrNew($data);
-	$link->x = $request->input('x', 0);
-	$link->y = $request->input('y', 0);
-	$link->save();
-	
-	list($data['id'], $data['right']) = [$data['right'], $data['id']];
-	$link = Link::firstOrNew($data);
-	$link->save();
-	
-	return response('', 200);
+        $data = [
+            'id' => $id,
+            'right' => $request->input('right'),
+            'type_id' => $request->input('type_id', 0),
+        ];
+        $link = Link::firstOrNew($data);
+        $link->x = $request->input('x', 0);
+        $link->y = $request->input('y', 0);
+        $link->save();
+
+        list($data['id'], $data['right']) = [$data['right'], $data['id']];
+        $link = Link::firstOrNew($data);
+        $link->save();
+
+        return response('', 200);
     }
 
     public function delete_link(Request $request, $id)
@@ -216,5 +155,6 @@ class ItemsController extends Controller
         $typeId = $request->input('type_id', 0);
         Link::where('id', $id)->where('right', $right)->where('type_id', $typeId)->delete();
         Link::where('id', $right)->where('right', $id)->where('type_id', $typeId)->delete();
+        return response('', 200);
     }
 }
