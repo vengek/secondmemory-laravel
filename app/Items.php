@@ -39,7 +39,7 @@ class Items extends Model
             ->take(1)
             ->first();
         DB::setFetchMode(PDO::FETCH_CLASS);
-        return new self($item);
+        return $item ? new self($item) : null;
     }
 
     public static function searchItemsForUser($query, $userId)
