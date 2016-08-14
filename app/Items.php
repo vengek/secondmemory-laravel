@@ -11,7 +11,7 @@ class Items extends Model
     const NUMBER_FOR_LEARN = 1;
     const TYPE_TO_LEARN = 1;
 
-    protected $fillable = ['id', 'type', 'text', 'href', 'user_id'];
+    protected $fillable = ['id', 'type', 'title', 'text', 'href', 'user_id'];
 
     public function scopeByUserId($query, $userId)
     {
