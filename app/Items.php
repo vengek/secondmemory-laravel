@@ -44,6 +44,10 @@ class Items extends Model
 
     public static function searchItemsForUser($query, $userId)
     {
-        return self::whereRaw("text @@ ?", [$query])->orWhereRaw("href @@ ?", [$query])->byUserId($userId)->get();
+        return self::whereRaw("text @@ ?", [$query])
+            ->orWhereRaw("title @@ ?", [$query])
+            ->orWhereRaw("href @@ ?", [$query])
+            ->byUserId($userId)
+            ->get();
     }
 }
