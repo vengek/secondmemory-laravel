@@ -5,6 +5,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class Link extends Model
 {
+    const TYPE_EMBED = 1;
+
     public $timestamps = false;
 
     protected $table = 'links';

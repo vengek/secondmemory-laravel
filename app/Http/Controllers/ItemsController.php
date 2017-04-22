@@ -130,7 +130,12 @@ class ItemsController extends Controller
     
     public function get_links($id)
     {
-	    return Link::where('id', $id)->get();
+        return Link::where('id', $id)->get();
+    }
+
+    public function get_backlinks($id)
+    {
+        return Link::where('right', $id)->where('type_id', Link::TYPE_EMBED)->get();
     }
     
     public function put_links(Request $request, $id)
