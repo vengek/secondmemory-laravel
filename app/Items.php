@@ -21,8 +21,8 @@ class Items extends Model
     public function save(array $options = [])
     {
         Link::where('id', $this->id)->where('type_id', Link::TYPE_EMBED)->delete();
-        preg_match_all('~smlink data-id="(\d+)"~', $this->text, $matches);
-        foreach ($matches[1] as $match) {
+        preg_match_all('~data-sm-id="(\d+)"~', $this->text, $matches);
+        foreach (array_unique($matches[1]) as $match) {
             $link = new Link();
             $link->id = $this->id;
             $link->type_id = Link::TYPE_EMBED;
