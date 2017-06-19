@@ -32,6 +32,8 @@ Route::group(['middleware' => ['web']], function () {
 Route::put('items/{id}/repeat', 'ItemsController@repeat');
 Route::get('items/next-to-repeat', 'ItemsController@next_to_repeat');
 Route::get('items/learn', 'ItemsController@learn');
+Route::get('items/inactive', 'ItemsController@inactive');
+Route::get('items/stats', 'ItemsController@stats');
 Route::get('items/search/{query}', 'ItemsController@search');
 Route::resource('items', 'ItemsController');
 Route::post('users/auth', 'UsersController@auth');

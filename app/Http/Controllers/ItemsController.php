@@ -7,7 +7,7 @@ use App\RepeatLog;
 use App\RepeatQueue;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
-use App\Http\Requests;
+use Illuminate\Support\Facades\DB;
 
 class ItemsController extends Controller
 {
@@ -100,6 +100,15 @@ class ItemsController extends Controller
         }
     }
 
+    public function inactive()
+    {
+        if ($item = Items::getInactiveItem($_SESSION['userId'])) {
+            return $item;
+        } else {
+            return response('', 204);
+        }
+    }
+
     public function search($query)
     {
         $items =  Items::searchItemsForUser($query, $_SESSION['userId']);
@@ -164,5 +173,24 @@ class ItemsController extends Controller
         Link::where('id', $id)->where('right', $right)->where('type_id', $typeId)->delete();
         Link::where('id', $right)->where('right', $id)->where('type_id', $typeId)->delete();
         return response('', 200);
+    }
+
+    public function stats(Request $request)
+    {
+        $queued = DB::table('items')
+            ->select('items.id')
+            ->join('repeat_queue', 'items.id', '=', 'repeat_queue.id')
+            ->whereRaw('repeat_queue.next_repeat < NOW() AND items.type=' . Items::TYPE_TO_REPEAT)
+            ->count();
+
+        return [
+            'on_repeat' => Items::byUserId($_SESSION['userId'])
+                ->where('type', '=', Items::TYPE_TO_REPEAT)->count(),
+            'on_repeat_queued' => $queued,
+            'on_learn' => Items::byUserId($_SESSION['userId'])
+                ->where('type', '=', Items::TYPE_TO_LEARN)->count(),
+            'inactive' => Items::byUserId($_SESSION['userId'])
+                ->where('type', '=', Items::TYPE_INACTIVE)->count(),
+        ];
     }
 }

@@ -1,5 +1,4 @@
 <?php
-
 namespace App;
 
 use Illuminate\Database\Eloquent\Model;
@@ -9,7 +8,10 @@ use PDO;
 class Items extends Model
 {
     const NUMBER_FOR_LEARN = 1;
+
+    const TYPE_TO_REPEAT = 0;
     const TYPE_TO_LEARN = 1;
+    const TYPE_INACTIVE = 2;
 
     protected $fillable = ['id', 'type', 'title', 'text', 'href', 'user_id'];
 
@@ -35,10 +37,19 @@ class Items extends Model
     public static function getItemForLearn($userId)
     {
         return self::orderByRaw('RANDOM()')
-                ->where('type', '=', Items::TYPE_TO_LEARN)
-                ->byUserId($userId)
-                ->take(Items::NUMBER_FOR_LEARN)
-                ->first();
+            ->where('type', '=', Items::TYPE_TO_LEARN)
+            ->byUserId($userId)
+            ->take(Items::NUMBER_FOR_LEARN)
+            ->first();
+    }
+
+    public static function getInactiveItem($userId)
+    {
+        return self::orderByRaw('RANDOM()')
+            ->where('type', '=', Items::TYPE_INACTIVE)
+            ->byUserId($userId)
+            ->take(1)
+            ->first();
     }
 
     public static function toRepeat()
