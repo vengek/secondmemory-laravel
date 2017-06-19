@@ -180,6 +180,7 @@ class ItemsController extends Controller
         $queued = DB::table('items')
             ->select('items.id')
             ->join('repeat_queue', 'items.id', '=', 'repeat_queue.id')
+            ->where('items.user_id', '=', $_SESSION['userId'])
             ->whereRaw('repeat_queue.next_repeat < NOW() AND items.type=' . Items::TYPE_TO_REPEAT)
             ->count();
 
